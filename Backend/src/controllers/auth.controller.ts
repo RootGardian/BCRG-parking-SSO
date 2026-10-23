@@ -86,6 +86,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
  * provisionne automatiquement l'utilisateur si inexistant,
  * et gère les rôles propres à l'application Parking BCRG.
  */
+// Cache mémoire local pour accélération SSO instantanée (0 ms)
+const ssoUserCache = new Map<string, number>();
+
 export const ssoLogin = async (req: Request, res: Response): Promise<void> => {
   let ssoToken = req.body?.sso_token || req.body?.token;
   if (!ssoToken && req.headers.authorization?.startsWith('Bearer ')) {
@@ -108,27 +111,41 @@ export const ssoLogin = async (req: Request, res: Response): Promise<void> => {
 
   let utilisateur: any = null;
 
-  // 2. Recherche résiliente pour matcher avec le profil importé via CSV :
-  // Stratégie A : Recherche par Nom et Prénom (insensible aux accents, casse et ordre, ex: "Kaba Karamo" <-> "Karamo Kaba")
-  if (adLastName || adFirstName) {
-    const allUsers = await db.orm.public.Utilisateur.all();
-    utilisateur = allUsers.find(u => matchPersonNames(adLastName, adFirstName, u.nom, u.prenom)) || null;
-
-    // Stratégie B : Si non trouvé, matcher par email ou identifiant AD (ex: karamo.kaba@bcrg-guinee.org <-> Kaba Karamo)
-    if (!utilisateur && (adEmail || adIdentifier)) {
-      utilisateur = allUsers.find(u =>
-        matchEmailWithPerson(adEmail, u.nom, u.prenom) ||
-        matchEmailWithPerson(adIdentifier, u.nom, u.prenom)
-      ) || null;
-    }
+  // 2. Recherche résiliente & ultra-performante :
+  // Stratégie 1 (Cache mémoire ~0 ms) : Si l'utilisateur s'est déjà connecté récemment sur cette instance
+  const cacheKey = (adIdentifier || adEmail).toLowerCase();
+  if (cacheKey && ssoUserCache.has(cacheKey)) {
+    const cachedId = ssoUserCache.get(cacheKey);
+    utilisateur = await db.orm.public.Utilisateur.where({ id: cachedId }).first();
   }
 
-  // Stratégie C : Si non trouvé, tester les variantes du matricule/identifiant
+  // Stratégie 2 (Index SQL direct ~1 ms) : Recherche par matricule direct ou variantes (ex: ADMIN001, 2007, etc.)
   if (!utilisateur && adIdentifier) {
     const variants = getMatriculeVariants(adIdentifier);
     for (const v of variants) {
       utilisateur = await db.orm.public.Utilisateur.where({ matricule: v }).first();
       if (utilisateur) break;
+    }
+  }
+
+  // Stratégie 3 (Index SQL direct ~1 ms) : Recherche directe par nom et prénom exacts
+  if (!utilisateur && adLastName && adFirstName) {
+    utilisateur = await db.orm.public.Utilisateur.where({ nom: adLastName, prenom: adFirstName }).first();
+    if (!utilisateur) {
+      utilisateur = await db.orm.public.Utilisateur.where({ nom: adFirstName, prenom: adLastName }).first();
+    }
+  }
+
+  // Stratégie 4 (Repli scan complet) : Uniquement si non trouvé par index directs (1ère connexion ou nom complexe)
+  if (!utilisateur && (adLastName || adFirstName)) {
+    const allUsers = await db.orm.public.Utilisateur.all();
+    utilisateur = allUsers.find(u => matchPersonNames(adLastName, adFirstName, u.nom, u.prenom)) || null;
+
+    if (!utilisateur && (adEmail || adIdentifier)) {
+      utilisateur = allUsers.find(u =>
+        matchEmailWithPerson(adEmail, u.nom, u.prenom) ||
+        matchEmailWithPerson(adIdentifier, u.nom, u.prenom)
+      ) || null;
     }
   }
 
@@ -171,6 +188,13 @@ export const ssoLogin = async (req: Request, res: Response): Promise<void> => {
 
   if (!utilisateur) {
     throw new AppError('Erreur lors du traitement du profil utilisateur.', 500);
+  }
+
+  // Mémorisation dans le cache rapide pour les prochaines connexions instantanées
+  if (cacheKey && utilisateur?.id) {
+    ssoUserCache.set(cacheKey, utilisateur.id);
+    if (adEmail) ssoUserCache.set(adEmail.toLowerCase(), utilisateur.id);
+    if (adIdentifier) ssoUserCache.set(adIdentifier.toLowerCase(), utilisateur.id);
   }
 
   // 3. Récupération des associations Parking (Agent ou Personnel)
