@@ -35,7 +35,7 @@ app.use(
   cors({
     origin: (origin, callback) => {
       // Autoriser requêtes serveur-à-serveur, curl, SSR ou si wildcard '*'
-      if (!origin || allowedOrigins === '*' || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins === '*' || (Array.isArray(allowedOrigins) && (allowedOrigins.includes('*') || allowedOrigins.includes(origin)))) {
         callback(null, true);
       } else {
         callback(null, false);

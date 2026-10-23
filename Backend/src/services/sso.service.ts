@@ -1,3 +1,13 @@
+const DEFAULT_BCRG_HUB_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAncF0ROGFdfqEMadsuMTH
+CqZZ5n+yE2B5H1kEjdK96GU/aNQG3pxN5o7CitKz00h6frOqHmEZeHVgs7qZG71S
+efjK9RoJ+p39/FejnOkNBsrao/dUYjNVEQBu6l62hQyWYzmUDsvLDf0d3//k91e1
+znfHtMX8lx37doUUW2LIbajkJUah+681cvh67X7BcWhTBpuUFJx6eDoi5GvuT2dz
+sWms4Wjs0KmBnYwPVJzkpwTDHs+1dqDX2uvjMJnUe4jDmMZCwfpYFw7iHMPxt60u
+0ALv60fwhtVLNigYkaCiDa5lYWZEsZQ9kOWhd8agSWRKITOpj/zJ3XBIRMGRATfD
+GwIDAQAB
+-----END PUBLIC KEY-----`;
+
 import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import path from 'path';
@@ -86,12 +96,19 @@ class SsoService {
     }
 
     // 3. Fichier par défaut bcrg_hub_public.pem
-    const defaultFile = path.join(__dirname, '../config/bcrg_hub_public.pem');
-    if (fs.existsSync(defaultFile)) {
-      return fs.readFileSync(defaultFile, 'utf8');
+    const candidatePaths = [
+      path.join(__dirname, '../config/bcrg_hub_public.pem'),
+      path.join(__dirname, '../../src/config/bcrg_hub_public.pem'),
+      path.join(process.cwd(), 'src/config/bcrg_hub_public.pem'),
+      path.join(process.cwd(), 'dist/config/bcrg_hub_public.pem')
+    ];
+    for (const p of candidatePaths) {
+      if (fs.existsSync(p)) {
+        return fs.readFileSync(p, 'utf8');
+      }
     }
 
-    return null;
+    return DEFAULT_BCRG_HUB_PUBLIC_KEY;
   }
 
   /**
