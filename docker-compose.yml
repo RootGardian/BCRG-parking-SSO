@@ -1,0 +1,81 @@
+services:
+  # ============================================================================
+  # Base de données PostgreSQL
+  # ============================================================================
+  db:
+    image: postgres:15-alpine
+    container_name: parking_bcrg_db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=bcrg_secure_password
+      - POSTGRES_DB=parking_bcrg_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - parking_net
+
+  # ============================================================================
+  # API Backend Node.js / Express (Port 5002)
+  # ============================================================================
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: parking_bcrg_api
+    restart: unless-stopped
+    ports:
+      - "5002:5002"
+    env_file:
+      - ./Backend/.env
+    environment:
+      - PORT=5002
+      - DATABASE_URL=postgresql://postgres:bcrg_secure_password@db:5432/parking_bcrg_db?schema=public
+      - CORS_ORIGIN=*
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - api_uploads:/usr/src/app/uploads
+    networks:
+      - parking_net
+
+  # ============================================================================
+  # Frontend Next.js 16 (Port 3002)
+  # ============================================================================
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:5002
+        INTERNAL_API_URL: http://backend:5002
+        NEXT_PUBLIC_BCRG_HUB_URL: http://localhost:5001
+        NEXT_PUBLIC_BCRG_HUB_FRONTEND_URL: http://localhost:5173
+    container_name: parking_bcrg_frontend
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+    depends_on:
+      - backend
+    networks:
+      - parking_net
+
+volumes:
+  postgres_data:
+    name: parking_bcrg_postgres_data
+  api_uploads:
+    name: parking_bcrg_api_uploads
+
+networks:
+  parking_net:
+    name: parking_net

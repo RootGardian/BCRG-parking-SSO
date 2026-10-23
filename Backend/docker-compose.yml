@@ -1,0 +1,57 @@
+services:
+  # ============================================================================
+  # Base de Données PostgreSQL
+  # ============================================================================
+  db:
+    image: postgres:15-alpine
+    container_name: parking_bcrg_db
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-bcrg_secure_password}
+      - POSTGRES_DB=${DB_NAME:-parking_bcrg_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - parking_backend_net
+
+  # ============================================================================
+  # API Backend Node.js / Express
+  # ============================================================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: parking_bcrg_api
+    restart: unless-stopped
+    ports:
+      - "${PORT:-5002}:${PORT:-5002}"
+    env_file:
+      - .env
+    environment:
+      - PORT=${PORT:-5002}
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-bcrg_secure_password}@db:5432/${DB_NAME:-parking_bcrg_db}?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - api_uploads:/usr/src/app/uploads
+    networks:
+      - parking_backend_net
+
+volumes:
+  postgres_data:
+    name: parking_bcrg_postgres_data
+  api_uploads:
+    name: parking_bcrg_api_uploads
+
+networks:
+  parking_backend_net:
+    name: parking_backend_net

@@ -1,0 +1,46 @@
+{
+  "name": "projet-front-parking_sous_sol_bcrg",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3002",
+    "build": "next build",
+    "start": "next start -p 3002",
+    "lint": "biome check",
+    "format": "biome format --write"
+  },
+  "dependencies": {
+    "@ducanh2912/next-pwa": "^10.2.9",
+    "@hookform/resolvers": "^5.9.1",
+    "@tanstack/react-query": "^5.102.8",
+    "axios": "^1.20.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.4.0",
+    "html5-qrcode": "^2.3.8",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
+    "lucide-react": "^1.37.0",
+    "next": "16.3.3",
+    "papaparse": "^5.7.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-hook-form": "^7.86.0",
+    "recharts": "^3.10.1",
+    "sonner": "^2.0.8",
+    "tailwind-merge": "^3.6.0",
+    "xlsx": "^0.18.5",
+    "zod": "^4.5.2",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.2",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/papaparse": "^5.5.2",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

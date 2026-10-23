@@ -1,0 +1,171 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Palette de marque brute BCRG (Charte graphique). */
+  --brand-green-700: #1d433b;
+  --brand-yellow-500: #b49c10;
+  --brand-orange-600: #e74920;
+  --brand-orange-500: #f29111;
+  --brand-red-700: #b74120;
+
+  /* Tokens sémantiques utilisés par les composants. */
+  --background: #ffffff;
+  --foreground: #1f1f1f;
+  --card: #ffffff;
+  --card-foreground: #1f1f1f;
+  --popover: #ffffff;
+  --popover-foreground: #1f1f1f;
+  --primary: var(--brand-green-700);
+  --primary-foreground: #ffffff;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #1f1f1f;
+  --muted: #f8faf9;
+  --surface: #ffffff;
+  --muted-foreground: #64748b;
+  --accent: #f5f5f5;
+  --accent-foreground: #1f1f1f;
+  --destructive: var(--brand-red-700);
+  --border: #d6d3cc;
+  --input: #d6d3cc;
+  --focus-ring: var(--brand-green-700);
+  --ring: var(--focus-ring);
+  --chart-1: var(--brand-green-700);
+  --chart-2: var(--brand-yellow-500);
+  --chart-3: var(--brand-orange-500);
+  --chart-4: var(--brand-orange-600);
+  --chart-5: var(--brand-red-700);
+  --radius: 0.625rem;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1f1f1f;
+  --sidebar-primary: var(--brand-green-700);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f5f5f5;
+  --sidebar-accent-foreground: #1f1f1f;
+  --sidebar-border: #d6d3cc;
+  --sidebar-ring: var(--focus-ring);
+
+  /* Typographies: texte courant + affichage marque. */
+  --font-body:
+    var(--font-verdana), var(--font-geist), "Avenir Next", "Segoe UI",
+    sans-serif;
+  --font-display: var(--font-laguinze), var(--font-body);
+}
+
+@theme inline {
+  /* Expose les tokens CSS dans le thème Tailwind v4. */
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-focus-ring: var(--focus-ring);
+
+  --color-brand-green-700: var(--brand-green-700);
+  --color-brand-yellow-500: var(--brand-yellow-500);
+  --color-brand-orange-600: var(--brand-orange-600);
+  --color-brand-orange-500: var(--brand-orange-500);
+  --color-brand-red-700: var(--brand-red-700);
+
+  --font-sans: var(--font-body);
+  --font-brand: var(--font-display);
+  --font-heading: var(--font-display);
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* Base globale: couleurs et police de lecture. */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+}
+
+/* Les titres utilisent la police de marque. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+}
+
+/* Bordure par défaut cohérente avec le système de tokens. */
+* {
+  border-color: var(--border);
+}
+
+/* Focus visible pour accessibilité clavier. */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.dark {
+  --background: #0f1715;
+  --foreground: #f8faf9;
+  --card: #142420;
+  --card-foreground: #f8faf9;
+  --popover: #142420;
+  --popover-foreground: #f8faf9;
+  --primary: #2d6a5d;
+  --primary-foreground: #ffffff;
+  --secondary: #1a332d;
+  --secondary-foreground: #f8faf9;
+  --muted: #1a332d;
+  --muted-foreground: #94a3b8;
+  --accent: #1a332d;
+  --accent-foreground: #f8faf9;
+  --destructive: #e74920;
+  --border: rgba(255, 255, 255, 0.12);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: var(--focus-ring);
+  --sidebar: #101e1b;
+  --sidebar-foreground: #f8faf9;
+  --sidebar-primary: #2d6a5d;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1a332d;
+  --sidebar-accent-foreground: #f8faf9;
+  --sidebar-border: rgba(255, 255, 255, 0.12);
+  --sidebar-ring: var(--focus-ring);
+}
