@@ -12,7 +12,8 @@ import { useAuth } from "../hooks/use-auth";
 import { type LoginInput, loginSchema } from "../schemas/login-schema";
 
 const BCRG_HUB_URL =
-  process.env.NEXT_PUBLIC_BCRG_HUB_URL || "http://localhost:5001";
+  process.env.NEXT_PUBLIC_BCRG_HUB_FRONTEND_URL ||
+  "http://localhost:3001";
 
 /**
  * Composant de formulaire de connexion institutionnel BCRG.
