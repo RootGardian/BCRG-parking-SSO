@@ -367,7 +367,7 @@ export const importPersonnel = async (req: Request, res: Response): Promise<void
  * Ajouter manuellement un membre du personnel
  */
 export const ajouterPersonnel = async (req: Request, res: Response): Promise<void> => {
-  const { nom, prenom, matricule, id_fonction, fonction, numero_plaque } = req.body;
+  const { nom, prenom, matricule, email, id_fonction, fonction, numero_plaque } = req.body;
 
   if (!matricule || (!id_fonction && !fonction)) {
     throw new AppError('Les champs matricule et fonction sont obligatoires.', 400);
@@ -408,21 +408,32 @@ export const ajouterPersonnel = async (req: Request, res: Response): Promise<voi
     throw new AppError('Ce matricule existe déjà.', 409);
   }
 
+  if (email) {
+    const existantEmail = await db.orm.public.Utilisateur.where({ email: email.trim().toLowerCase() }).first();
+    if (existantEmail) {
+      throw new AppError('Cette adresse email est déjà associée à un compte.', 409);
+    }
+  }
+
   await db.transaction(async (tx) => {
     // Mot de passe par défaut = BCrgP@rking@2026, l'utilisateur devra le changer à la première connexion
     const hashedPassword = await bcrypt.hash('BCrgP@rking@2026' + PEPPER, SALT_ROUNDS);
+
+    const emailNorm = email ? email.trim().toLowerCase() : null;
 
     const utilisateur = await tx.orm.public.Utilisateur.create({
       nom: nom || null,
       prenom: prenom || null,
       matricule,
+      email: emailNorm,
       mot_de_passe: hashedPassword,
       est_actif: true,
       doit_changer_mdp: true,
       role: ['personnel']
     });
 
-    const qrCodeBase64 = await QRCode.toDataURL(matricule);
+    const qrPayload = emailNorm || matricule;
+    const qrCodeBase64 = await QRCode.toDataURL(qrPayload);
 
     const personnel = await tx.orm.public.Personnel.create({
       id_utilisateur: utilisateur.id,
@@ -466,7 +477,7 @@ export const ajouterPersonnel = async (req: Request, res: Response): Promise<voi
  */
 export const modifierPersonnel = async (req: Request, res: Response): Promise<void> => {
   const matriculeActuel = String(req.params.matricule);
-  const { nom, prenom, matricule, id_fonction } = req.body;
+  const { nom, prenom, matricule, email, id_fonction } = req.body;
 
   const utilisateur = await db.orm.public.Utilisateur
     .where({ matricule: matriculeActuel })
@@ -486,13 +497,25 @@ export const modifierPersonnel = async (req: Request, res: Response): Promise<vo
       }
     }
 
+    if (email !== undefined && email !== null && email.trim() !== '') {
+      const emailNorm = email.trim().toLowerCase();
+      if (emailNorm !== utilisateur.email) {
+        const existantEmail = await tx.orm.public.Utilisateur.where({ email: emailNorm }).first();
+        if (existantEmail && existantEmail.id !== utilisateur.id) {
+          throw new AppError('Cette adresse email est déjà utilisée par un autre compte.', 409);
+        }
+      }
+    }
+
     const updatedMatricule = (matricule && typeof matricule === 'string') ? matricule : matriculeActuel;
+    const updatedEmail = email !== undefined ? (email ? email.trim().toLowerCase() : null) : utilisateur.email;
 
     // Mise à jour Utilisateur
     await tx.orm.public.Utilisateur.where({ id: utilisateur.id }).update({
       nom: nom !== undefined ? nom : utilisateur.nom,
       prenom: prenom !== undefined ? prenom : utilisateur.prenom,
-      matricule: updatedMatricule
+      matricule: updatedMatricule,
+      email: updatedEmail
     });
 
     // Récupérer le personnel avec les types corrects
@@ -518,9 +541,11 @@ export const modifierPersonnel = async (req: Request, res: Response): Promise<vo
 
       let qr_code = personnelToUpdate.qr_code;
 
-      // Regénérer QR Code si le matricule change
-      if (matricule && typeof matricule === 'string' && matricule !== matriculeActuel) {
-        qr_code = await QRCode.toDataURL(updatedMatricule);
+      // Regénérer QR Code si l'email ou le matricule change
+      const identifiantActuel = utilisateur.email || matriculeActuel;
+      const nouvelIdentifiant = updatedEmail || updatedMatricule;
+      if (identifiantActuel !== nouvelIdentifiant || !qr_code) {
+        qr_code = await QRCode.toDataURL(nouvelIdentifiant);
       }
 
       // Mise à jour Personnel

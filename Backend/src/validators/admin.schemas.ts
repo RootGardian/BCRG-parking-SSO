@@ -5,6 +5,7 @@ export const ajouterPersonnelSchema = z.object({
     nom: z.string().min(1, 'Le nom est requis'),
     prenom: z.string().min(1, 'Le prénom est requis'),
     matricule: z.string().min(1, 'Le matricule est requis'),
+    email: z.string().email('Format email invalide').optional().nullable(),
     id_fonction: z.number().int().optional(),
     fonction: z.string().optional(),
     numero_plaque: z.string().optional(),
@@ -16,6 +17,7 @@ export const modifierPersonnelSchema = z.object({
     nom: z.string().optional(),
     prenom: z.string().optional(),
     matricule: z.string().optional(),
+    email: z.string().email('Format email invalide').optional().nullable(),
     id_fonction: z.number().int().optional(),
   }).strict(),
 });

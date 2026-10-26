@@ -6,6 +6,7 @@ import type { Vehicule } from "@/types/models";
 export interface PersonnelItem {
   id: number;
   matricule: string;
+  email?: string | null;
   nom: string;
   prenom: string;
   fonction?: string;
@@ -23,6 +24,7 @@ export interface PersonnelCreateInput {
   nom: string;
   prenom: string;
   matricule: string;
+  email?: string;
   fonction?: string;
   id_fonction?: number;
   numero_plaque?: string;
@@ -35,6 +37,7 @@ export interface PersonnelUpdateInput {
   nom?: string;
   prenom?: string;
   matricule?: string;
+  email?: string;
   id_fonction?: number;
 }
 

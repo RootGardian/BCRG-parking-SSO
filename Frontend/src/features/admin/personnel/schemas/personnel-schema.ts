@@ -10,6 +10,7 @@ export const personnelCreateSchema = z.object({
     .min(2, "Le prénom doit contenir au moins 2 caractères")
     .trim(),
   matricule: z.string().min(1, "Le matricule est obligatoire").trim(),
+  email: z.string().email("Format d'email invalide").optional().or(z.literal("")),
   fonction: z.string().optional(),
   numero_plaque: z.string().optional(),
 });
@@ -25,6 +26,7 @@ export const personnelUpdateSchema = z.object({
     .string()
     .min(2, "Le prénom doit contenir au moins 2 caractères")
     .trim(),
+  email: z.string().email("Format d'email invalide").optional().or(z.literal("")),
   fonction: z.string().optional(),
 });
 

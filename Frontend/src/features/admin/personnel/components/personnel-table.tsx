@@ -40,8 +40,15 @@ export function PersonnelTable({
       header: "Nom & Prénom",
       sortable: true,
       accessor: (row: PersonnelItem) => (
-        <div className="font-bold text-foreground font-brand text-sm">
-          {row.prenom} {row.nom}
+        <div>
+          <div className="font-bold text-foreground font-brand text-sm">
+            {row.prenom} {row.nom}
+          </div>
+          {row.email && (
+            <div className="text-[11px] text-muted-foreground font-mono">
+              {row.email}
+            </div>
+          )}
         </div>
       ),
     },

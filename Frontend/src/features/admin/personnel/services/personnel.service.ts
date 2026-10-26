@@ -47,6 +47,7 @@ function normalizePersonnelItem(
   return {
     id: Number(item.id || personnelObj?.id || index + 1),
     matricule: String(item.matricule || ""),
+    email: item.email ? String(item.email) : null,
     nom: String(item.nom || ""),
     prenom: String(item.prenom || ""),
     fonction: fonctionNom,

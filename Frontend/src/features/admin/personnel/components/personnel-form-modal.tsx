@@ -49,10 +49,11 @@ export function PersonnelFormModal({
     formState: { errors, isSubmitting },
   } = useForm<PersonnelCreateFormValues>({
     resolver: zodResolver(personnelCreateSchema),
-    defaultValues: {
+      defaultValues: {
       nom: "",
       prenom: "",
       matricule: "",
+      email: "",
       fonction: "",
       numero_plaque: "",
     },
@@ -81,6 +82,7 @@ export function PersonnelFormModal({
         nom: initialData.nom,
         prenom: initialData.prenom,
         matricule: initialData.matricule,
+        email: initialData.email || "",
         fonction: initialData.fonction || "",
         numero_plaque: "",
       });
@@ -89,6 +91,7 @@ export function PersonnelFormModal({
         nom: "",
         prenom: "",
         matricule: "",
+        email: "",
         fonction: "",
         numero_plaque: "",
       });
@@ -100,6 +103,7 @@ export function PersonnelFormModal({
       nom: data.nom,
       prenom: data.prenom,
       matricule: data.matricule,
+      email: data.email ? data.email.trim() : undefined,
       fonction: data.fonction,
       numero_plaque: data.numero_plaque,
     });
@@ -116,7 +120,7 @@ export function PersonnelFormModal({
       }
       description={
         isEditing
-          ? "Mettre à jour l'identité et la fonction au sein de la Banque Centrale."
+          ? "Mettre à jour l'identité, l'adresse email et la fonction au sein de la Banque Centrale."
           : "Enregistrer un nouveau personnel."
       }
       footer={
@@ -152,13 +156,22 @@ export function PersonnelFormModal({
           />
         </div>
 
-        <Input
-          label="Matricule *"
-          placeholder="ex: 2004"
-          disabled={isEditing}
-          error={errors.matricule?.message}
-          {...register("matricule")}
-        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Input
+            label="Matricule *"
+            placeholder="ex: 2004"
+            disabled={isEditing}
+            error={errors.matricule?.message}
+            {...register("matricule")}
+          />
+          <Input
+            label="Adresse Email"
+            type="email"
+            placeholder="ex: mbano@bcrg-guinee.org"
+            error={errors.email?.message}
+            {...register("email")}
+          />
+        </div>
 
         <SearchableSelect
           label="Fonction"
