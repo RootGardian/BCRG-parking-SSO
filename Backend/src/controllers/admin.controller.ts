@@ -264,7 +264,7 @@ export const importPersonnel = async (req: Request, res: Response): Promise<void
       for (let i = 0; i < uniqueResults.length; i += chunkSize) {
         const chunk = uniqueResults.slice(i, i + chunkSize);
         await Promise.all(chunk.map(async (row) => {
-          const { nom, prenom, matricule, fonction, numero_plaque, marque, couleur } = row;
+          const { nom, prenom, matricule, email, fonction, numero_plaque, marque, couleur } = row;
           const variants = getMatriculeVariants(matricule);
 
           // Vérifier si l'utilisateur existe déjà sous ce matricule ou l'une de ses variantes
@@ -274,11 +274,16 @@ export const importPersonnel = async (req: Request, res: Response): Promise<void
             if (utilisateur) break;
           }
 
+          if (!utilisateur && email) {
+            utilisateur = await tx.orm.public.Utilisateur.where({ email: email.trim().toLowerCase() }).first();
+          }
+
           if (!utilisateur) {
             utilisateur = await tx.orm.public.Utilisateur.create({
               nom: nom || null,
               prenom: prenom || null,
               matricule,
+              email: email ? email.trim().toLowerCase() : null,
               mot_de_passe: defaultHashedPassword,
               est_actif: true,
               doit_changer_mdp: false,
@@ -289,6 +294,7 @@ export const importPersonnel = async (req: Request, res: Response): Promise<void
             const updates: any = {};
             if (!utilisateur.nom && nom) updates.nom = nom;
             if (!utilisateur.prenom && prenom) updates.prenom = prenom;
+            if (!utilisateur.email && email) updates.email = email.trim().toLowerCase();
             if (Object.keys(updates).length > 0) {
               await tx.orm.public.Utilisateur.where({ id: utilisateur.id }).update(updates);
             }
@@ -300,7 +306,8 @@ export const importPersonnel = async (req: Request, res: Response): Promise<void
           let personnel = await tx.orm.public.Personnel.where({ id_utilisateur: utilisateur.id }).first();
 
           if (!personnel) {
-            const qrCodeBase64 = await QRCode.toDataURL(matricule);
+            const qrPayload = email ? email.trim().toLowerCase() : (utilisateur.email || matricule);
+            const qrCodeBase64 = await QRCode.toDataURL(qrPayload);
             personnel = await tx.orm.public.Personnel.create({
               id_utilisateur: utilisateur.id,
               id_fonction,

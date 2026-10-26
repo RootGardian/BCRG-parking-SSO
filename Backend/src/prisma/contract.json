@@ -944,6 +944,13 @@
                   "kind": "scalar"
                 }
               },
+              "email": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "est_actif": {
                 "nullable": true,
                 "type": {
@@ -1053,6 +1060,9 @@
               "fields": {
                 "doit_changer_mdp": {
                   "column": "doit_changer_mdp"
+                },
+                "email": {
+                  "column": "email"
                 },
                 "est_actif": {
                   "column": "est_actif"
@@ -1950,6 +1960,11 @@
                   "nativeType": "bool",
                   "nullable": false
                 },
+                "email": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "est_actif": {
                   "codecId": "pg/bool@1",
                   "nativeType": "bool",
@@ -2013,6 +2028,11 @@
                 {
                   "columns": [
                     "matricule"
+                  ]
+                },
+                {
+                  "columns": [
+                    "email"
                   ]
                 }
               ]
@@ -2144,7 +2164,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "067f272bc0f810f29b0703235ae01865079d25e44d9d0945260cc5d933aeadfe"
+    "storageHash": "df69377fd9b5192e645d1bf23868f005af2d01c1edbd96fd56c2b98fa4c65dd7"
   },
   "capabilities": {
     "postgres": {

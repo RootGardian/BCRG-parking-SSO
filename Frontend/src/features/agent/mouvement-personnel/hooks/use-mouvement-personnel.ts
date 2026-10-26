@@ -29,6 +29,9 @@ function extractMatriculeFromQr(rawText: string): string {
   if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
     try {
       const parsed = JSON.parse(trimmed);
+      if (typeof parsed.email === "string" && parsed.email.trim()) {
+        return parsed.email.trim().toLowerCase();
+      }
       if (typeof parsed.matricule === "string" && parsed.matricule.trim()) {
         return parsed.matricule.trim();
       }

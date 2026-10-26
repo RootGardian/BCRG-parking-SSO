@@ -56,11 +56,20 @@ app.set('trust proxy', 1);
 // Limiteur général (prévention DoS)
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // Limite à 1000 requêtes
+  max: 10000, // 10 000 requêtes pour permettre une utilisation normale par des centaines d'employés
   standardHeaders: 'draft-7', // Renvoie les headers RateLimit-*
   legacyHeaders: false, // Désactive les headers X-RateLimit-*
   message: { error: 'Trop de requêtes, veuillez réessayer dans 15 minutes.' },
-  keyGenerator: (req) => req.ip + (req.headers['user-agent'] || '')
+  // Exclure totalement les routes SSO et health check du rate limiter
+  skip: (req) => {
+    return (
+      req.path === '/api/auth/sso-login' ||
+      req.path === '/api/auth/sso' ||
+      req.path === '/api/auth/slo' ||
+      req.path === '/health'
+    );
+  },
+  keyGenerator: (req) => req.ip || 'global'
 });
 app.use('/api', globalLimiter);
 

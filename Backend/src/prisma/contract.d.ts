@@ -33,7 +33,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'067f272bc0f810f29b0703235ae01865079d25e44d9d0945260cc5d933aeadfe'>;
+  StorageHashBase<'df69377fd9b5192e645d1bf23868f005af2d01c1edbd96fd56c2b98fa4c65dd7'>;
 export type ExecutionHash = ExecutionHashBase<string>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
@@ -304,6 +304,7 @@ export type FieldOutputTypes = {
       readonly est_actif: CodecTypes['pg/bool@1']['output'] | null;
       readonly doit_changer_mdp: CodecTypes['pg/bool@1']['output'];
       readonly session_id: CodecTypes['pg/text@1']['output'] | null;
+      readonly email: CodecTypes['pg/text@1']['output'] | null;
     };
     readonly Vehicule: {
       readonly id: CodecTypes['pg/int4@1']['output'];
@@ -382,6 +383,7 @@ export type FieldInputTypes = {
       readonly est_actif: CodecTypes['pg/bool@1']['input'] | null;
       readonly doit_changer_mdp: CodecTypes['pg/bool@1']['input'];
       readonly session_id: CodecTypes['pg/text@1']['input'] | null;
+      readonly email: CodecTypes['pg/text@1']['input'] | null;
     };
     readonly Vehicule: {
       readonly id: CodecTypes['pg/int4@1']['input'];
@@ -452,6 +454,7 @@ export type StorageColumnTypes = {
     };
     readonly utilisateur: {
       readonly doit_changer_mdp: CodecTypes['pg/bool@1']['output'];
+      readonly email: CodecTypes['pg/text@1']['output'] | null;
       readonly est_actif: CodecTypes['pg/bool@1']['output'] | null;
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly matricule: CodecTypes['pg/text@1']['output'] | null;
@@ -530,6 +533,7 @@ export type StorageColumnInputTypes = {
     };
     readonly utilisateur: {
       readonly doit_changer_mdp: CodecTypes['pg/bool@1']['input'];
+      readonly email: CodecTypes['pg/text@1']['input'] | null;
       readonly est_actif: CodecTypes['pg/bool@1']['input'] | null;
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly matricule: CodecTypes['pg/text@1']['input'] | null;
@@ -1175,9 +1179,17 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
                 };
+                readonly email: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
               };
               primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [{ readonly columns: readonly ['matricule'] }];
+              uniques: readonly [
+                { readonly columns: readonly ['matricule'] },
+                { readonly columns: readonly ['email'] },
+              ];
               indexes: readonly [];
               foreignKeys: readonly [];
             };
@@ -1878,6 +1890,10 @@ type ContractBase = Omit<
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly email: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
             };
             readonly relations: {
               readonly agent: {
@@ -1927,6 +1943,7 @@ type ContractBase = Omit<
                 readonly est_actif: { readonly column: 'est_actif' };
                 readonly doit_changer_mdp: { readonly column: 'doit_changer_mdp' };
                 readonly session_id: { readonly column: 'session_id' };
+                readonly email: { readonly column: 'email' };
               };
             };
           };

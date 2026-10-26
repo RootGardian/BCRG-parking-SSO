@@ -47,10 +47,13 @@ export function LoginForm() {
     },
   });
 
-  // Détection d'un jeton sso_token transmis directement en query param
+  const processedTokenRef = React.useRef<string | null>(null);
+
+  // Détection d'un jeton sso_token transmis directement en query param (1 seule exécution garantie)
   React.useEffect(() => {
     const ssoToken = searchParams.get("sso_token");
-    if (ssoToken && !isSsoAuthenticating) {
+    if (ssoToken && processedTokenRef.current !== ssoToken) {
+      processedTokenRef.current = ssoToken;
       setIsSsoAuthenticating(true);
       authService
         .loginWithSso(ssoToken)
@@ -67,9 +70,11 @@ export function LoginForm() {
         .catch((err: any) => {
           setSsoError(err.message || "Échec de validation du jeton SSO.");
           setIsSsoAuthenticating(false);
+          // Retirer le token de l'URL pour éviter toute boucle infinie au rechargement
+          router.replace("/login");
         });
     }
-  }, [searchParams, isSsoAuthenticating, router]);
+  }, [searchParams, router]);
 
   const onSubmit = (data: LoginInput) => {
     handleLogin(data);

@@ -135,10 +135,19 @@ export const enregistrerEntree = async (req: Request, res: Response): Promise<vo
       }
       
       if (!personnel && matricule_personnel) {
-        const utilisateur = await tx.orm.public.Utilisateur
-          .where({ matricule: matricule_personnel })
+        const queryTerm = matricule_personnel.trim();
+        let utilisateur = await tx.orm.public.Utilisateur
+          .where({ matricule: queryTerm })
           .include('personnel', p => p.include('vehicules', v => v))
           .first();
+
+        // Si non trouvé par matricule, chercher par email
+        if (!utilisateur) {
+          utilisateur = await tx.orm.public.Utilisateur
+            .where({ email: queryTerm.toLowerCase() })
+            .include('personnel', p => p.include('vehicules', v => v))
+            .first();
+        }
         
         personnel = utilisateur?.personnel;
 
@@ -275,10 +284,18 @@ export const enregistrerSortie = async (req: Request, res: Response): Promise<vo
         .first();
     }
   } else if (matricule_personnel) {
-    const utilisateur = await db.orm.public.Utilisateur
-      .where({ matricule: matricule_personnel })
+    const queryTerm = matricule_personnel.trim();
+    let utilisateur = await db.orm.public.Utilisateur
+      .where({ matricule: queryTerm })
       .include('personnel', p => p)
       .first();
+
+    if (!utilisateur) {
+      utilisateur = await db.orm.public.Utilisateur
+        .where({ email: queryTerm.toLowerCase() })
+        .include('personnel', p => p)
+        .first();
+    }
     
     if (utilisateur?.personnel) {
       mouvement = await db.orm.public.Mouvement

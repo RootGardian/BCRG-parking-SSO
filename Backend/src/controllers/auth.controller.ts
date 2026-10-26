@@ -144,6 +144,7 @@ export const ssoLogin = async (req: Request, res: Response): Promise<void> => {
 
     utilisateur = await db.orm.public.Utilisateur.create({
       matricule: fallbackMatricule || null,
+      email: adEmail || null,
       nom: adLastName || null,
       prenom: adFirstName || null,
       role: ['personnel'],
@@ -157,11 +158,14 @@ export const ssoLogin = async (req: Request, res: Response): Promise<void> => {
     }
 
     // On préserve le matricule RH officiel importé depuis le CSV (ex: "BCRG-001"),
-    // et on complète simplement les champs nom/prénom si manquants
+    // et on complète simplement les champs nom/prénom/email si manquants
     const updates: any = {
       doit_changer_mdp: false,
     };
 
+    if (!utilisateur.email && adEmail) {
+      updates.email = adEmail;
+    }
     if (!utilisateur.nom && adLastName) {
       updates.nom = adLastName;
     }

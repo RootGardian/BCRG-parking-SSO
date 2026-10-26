@@ -28,6 +28,7 @@ enum TypeEntreeEnum {
   est_actif        Boolean?
   doit_changer_mdp Boolean     @default(true)
   session_id       String?
+  email            String?     @unique
 
   
   personnel    Personnel?

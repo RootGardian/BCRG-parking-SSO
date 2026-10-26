@@ -150,7 +150,8 @@ export const downloadQRCode = async (req: Request, res: Response): Promise<void>
   // S'il n'existe pas, on le génère à la volée !
   if (!qrCodeBase64) {
     const QRCode = (await import('qrcode')).default;
-    qrCodeBase64 = await QRCode.toDataURL(matricule);
+    const qrPayload = utilisateur.email || matricule;
+    qrCodeBase64 = await QRCode.toDataURL(qrPayload);
     await db.orm.public.Personnel.where({ id: Number(utilisateur.personnel.id) }).update({ qr_code: qrCodeBase64 as string });
   }
 
