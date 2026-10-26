@@ -29,11 +29,13 @@ cp .env.example .env
 | `NODE_ENV` | Mode de fonctionnement | `production` |
 | `NEXT_PUBLIC_API_URL` | URL de l'API Backend accessible aux navigateurs | `https://api-parking.bcrg.gn` |
 | `INTERNAL_API_URL` | URL de l'API Backend pour les requêtes serveur SSR (`/sso`) | `https://api-parking.bcrg.gn` |
-| `NEXT_PUBLIC_BCRG_HUB_URL` | URL de l'API du portail central BCRG HUB | `https://api-hub.bcrg.gn` |
-| `NEXT_PUBLIC_BCRG_HUB_FRONTEND_URL` | URL de l'application web du portail BCRG HUB | `https://hub.bcrg.gn` |
+| `NEXT_PUBLIC_BCRG_HUB_URL` | URL de l'API du portail central BCRG HUB (Backend :5001) | `https://api-hub.bcrg.gn` ou `http://<IP>:5001` |
+| `NEXT_PUBLIC_BCRG_HUB_FRONTEND_URL` | URL de l'application web du portail BCRG HUB (Frontend :3001) | `https://hub.bcrg.gn` ou `http://<IP>:3001` |
 
 > [!IMPORTANT]
-> Les variables commençant par `NEXT_PUBLIC_` sont figées dans le code JavaScript du navigateur lors du build. Si vous changez l'URL de l'API, vous devez recompiler l'application (`npm run build` ou `docker compose build`).
+> **Points d'attention cruciaux lors du déploiement :**
+> 1. Les variables commençant par `NEXT_PUBLIC_` sont figées dans le code JavaScript du navigateur lors du build. Si vous modifiez l'adresse IP du serveur ou les URLs du HUB, vous devez impérativement recompiler l'application avec `docker compose build --no-cache frontend`.
+> 2. Assurez-vous que `NEXT_PUBLIC_BCRG_HUB_FRONTEND_URL` pointe bien vers le portail Web du HUB (port 3001 ou domaine racine) et non vers le port de l'API Backend (port 5001).
 
 ---
 

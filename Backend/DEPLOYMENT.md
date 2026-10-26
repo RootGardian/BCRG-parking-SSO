@@ -38,6 +38,12 @@ chmod 600 .env
 | `ADMIN_PASSWORD` | Mot de passe de l'admin initial | *(mot de passe fort)* |
 | `BCRG_HUB_URL` | URL de l'API BCRG HUB (SSO) | `https://api-hub.bcrg.gn` |
 | `BCRG_HUB_JWKS_URL` | Endpoint JWKS du HUB pour valider les tokens SSO | `https://api-hub.bcrg.gn/api/security/.well-known/jwks.json` |
+| `BCRG_HUB_JWT_SECRET` | Clé secrète HMAC partagée avec le HUB (Doit être identique au `JWT_SECRET` du HUB) | *(clé secrète partagée)* |
+| `BCRG_HUB_PUBLIC_KEY_PATH` | Chemin vers la clé publique PEM du HUB (mode asymétrique RS256) | `./src/config/bcrg_hub_public.pem` |
+
+> [!TIP]
+> **Règle d'or SSO en production :**
+> La valeur de `BCRG_HUB_JWT_SECRET` dans le Backend du Parking doit être **exactement identique** à la valeur de `JWT_SECRET` configurée dans le fichier d'environnement du **BCRG HUB**. En cas de signature asymétrique RS256, le backend utilise automatiquement le JWKS dynamique du HUB ou la clé publique PEM locale.
 
 ---
 

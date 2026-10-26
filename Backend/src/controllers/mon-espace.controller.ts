@@ -10,13 +10,33 @@ export const getMonProfil = async (req: Request, res: Response): Promise<void> =
   // @ts-ignore
   const userId = req.user?.id;
 
-  const utilisateur = await db.orm.public.Utilisateur
+  let utilisateur = await db.orm.public.Utilisateur
     .where({ id: userId })
     .include('personnel', (p) => p.include('fonction', (f) => f).include('vehicules', (v) => v))
     .first();
 
-  if (!utilisateur || !utilisateur.personnel) {
-    throw new AppError('Profil personnel introuvable.', 404);
+  if (!utilisateur) {
+    throw new AppError('Profil utilisateur introuvable.', 404);
+  }
+
+  // Si la fiche personnel n'existe pas encore, on la génère automatiquement avec son QR code
+  if (!utilisateur.personnel) {
+    const QRCode = (await import('qrcode')).default;
+    const qrIdentifier = utilisateur.email || utilisateur.matricule || `BCRG-${utilisateur.id}`;
+    const qrCodeBase64 = await QRCode.toDataURL(qrIdentifier);
+    const newPersonnel = await db.orm.public.Personnel.create({
+      id_utilisateur: utilisateur.id,
+      qr_code: qrCodeBase64
+    });
+
+    utilisateur = {
+      ...utilisateur,
+      personnel: {
+        ...newPersonnel,
+        fonction: null,
+        vehicules: []
+      }
+    };
   }
 
   const { mot_de_passe, ...userInfo } = utilisateur;
@@ -28,15 +48,43 @@ export const getMonProfil = async (req: Request, res: Response): Promise<void> =
  */
 export const getMonQRCode = async (req: Request, res: Response): Promise<void> => {
   // @ts-ignore
-  const id_personnel = req.user?.id_personnel;
+  const userId = req.user?.id;
+  // @ts-ignore
+  let id_personnel = req.user?.id_personnel;
 
-  if (!id_personnel) {
-    throw new AppError('Accès refusé. Vous n\'êtes pas reconnu comme personnel.', 403);
+  let personnel = null;
+  if (id_personnel) {
+    personnel = await db.orm.public.Personnel.where({ id: id_personnel }).first();
   }
 
-  const personnel = await db.orm.public.Personnel.where({ id: id_personnel }).first();
-  if (!personnel || !personnel.qr_code) {
-    throw new AppError('QR Code introuvable.', 404);
+  if (!personnel && userId) {
+    personnel = await db.orm.public.Personnel.where({ id_utilisateur: userId }).first();
+  }
+
+  // Si aucune fiche personnel n'existe encore pour l'utilisateur connecté, on la crée à la volée
+  if (!personnel && userId) {
+    const user = await db.orm.public.Utilisateur.where({ id: userId }).first();
+    const qrIdentifier = user?.email || user?.matricule || `BCRG-${userId}`;
+    const QRCode = (await import('qrcode')).default;
+    const qrCodeBase64 = await QRCode.toDataURL(qrIdentifier);
+    personnel = await db.orm.public.Personnel.create({
+      id_utilisateur: userId,
+      qr_code: qrCodeBase64
+    });
+  }
+
+  if (!personnel) {
+    throw new AppError('Fiche personnel introuvable.', 404);
+  }
+
+  // S'il n'a pas encore de QR code, on le génère immédiatement à la volée
+  if (!personnel.qr_code) {
+    const user = await db.orm.public.Utilisateur.where({ id: userId }).first();
+    const qrIdentifier = user?.email || user?.matricule || `BCRG-${personnel.id}`;
+    const QRCode = (await import('qrcode')).default;
+    const qrCodeBase64 = await QRCode.toDataURL(qrIdentifier);
+    await db.orm.public.Personnel.where({ id: personnel.id }).update({ qr_code: qrCodeBase64 });
+    personnel = { ...personnel, qr_code: qrCodeBase64 };
   }
 
   res.json({ qr_code: personnel.qr_code });

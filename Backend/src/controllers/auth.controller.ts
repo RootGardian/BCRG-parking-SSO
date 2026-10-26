@@ -44,7 +44,23 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
   // Récupération de l'agent si l'utilisateur en est un
   const agent = await db.orm.public.Agent.where({ id_utilisateur: utilisateur.id }).first();
-  const personnel = await db.orm.public.Personnel.where({ id_utilisateur: utilisateur.id }).first();
+  let personnel = await db.orm.public.Personnel.where({ id_utilisateur: utilisateur.id }).first();
+
+  // Auto-génération du QR Code et de la fiche Personnel dès la première connexion
+  const QRCode = (await import('qrcode')).default;
+  const qrIdentifier = utilisateur.email || utilisateur.matricule || `BCRG-${utilisateur.id}`;
+
+  if (!personnel) {
+    const qrCodeBase64 = await QRCode.toDataURL(qrIdentifier);
+    personnel = await db.orm.public.Personnel.create({
+      id_utilisateur: utilisateur.id,
+      qr_code: qrCodeBase64
+    });
+  } else if (!personnel.qr_code) {
+    const qrCodeBase64 = await QRCode.toDataURL(qrIdentifier);
+    await db.orm.public.Personnel.where({ id: personnel.id }).update({ qr_code: qrCodeBase64 });
+    personnel = { ...personnel, qr_code: qrCodeBase64 };
+  }
 
   // Création du token et du session_id
   const session_id = crypto.randomUUID();
@@ -190,9 +206,26 @@ export const ssoLogin = async (req: Request, res: Response): Promise<void> => {
     if (adIdentifier) ssoUserCache.set(adIdentifier.toLowerCase(), utilisateur.id);
   }
 
-  // 3. Récupération des associations Parking (Agent ou Personnel)
+  // 3. Récupération ou création automatique de la fiche Personnel avec son QR Code
   const agent = await db.orm.public.Agent.where({ id_utilisateur: utilisateur.id }).first();
-  const personnel = await db.orm.public.Personnel.where({ id_utilisateur: utilisateur.id }).first();
+  let personnel = await db.orm.public.Personnel.where({ id_utilisateur: utilisateur.id }).first();
+
+  const QRCode = (await import('qrcode')).default;
+  const qrIdentifier = utilisateur.email || utilisateur.matricule || `BCRG-${utilisateur.id}`;
+
+  if (!personnel) {
+    // Création automatique de la fiche personnel dès la première connexion
+    const qrCodeBase64 = await QRCode.toDataURL(qrIdentifier);
+    personnel = await db.orm.public.Personnel.create({
+      id_utilisateur: utilisateur.id,
+      qr_code: qrCodeBase64
+    });
+  } else if (!personnel.qr_code) {
+    // Génération automatique du QR Code si manquant
+    const qrCodeBase64 = await QRCode.toDataURL(qrIdentifier);
+    await db.orm.public.Personnel.where({ id: personnel.id }).update({ qr_code: qrCodeBase64 });
+    personnel = { ...personnel, qr_code: qrCodeBase64 };
+  }
 
   // 4. Génération de la session locale Parking
   const session_id = crypto.randomUUID();

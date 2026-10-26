@@ -13,8 +13,8 @@ import {
 
 const router = Router();
 
-// Toutes les routes de cet espace sont réservées au rôle Personnel
-router.use('/mon-espace', verifyToken, authorize(['Personnel']));
+// Toutes les routes de cet espace sont accessibles au personnel, administrateurs et superviseurs
+router.use('/mon-espace', verifyToken, authorize(['Personnel', 'Administrateur', 'Supervision']));
 
 router.get('/mon-espace/profil', getMonProfil);
 router.get('/mon-espace/qrcode', getMonQRCode);
