@@ -160,11 +160,25 @@ class SsoService {
         }
       }
     } else if (alg === 'HS256') {
-      const symmetricSecret = process.env.BCRG_HUB_JWT_SECRET || 'supersecret_sso_portal_key_2026';
-      try {
-        payload = jwt.verify(token, symmetricSecret, { algorithms: ['HS256'] });
-      } catch (err: any) {
-        throw new AppError(`Jeton SSO HMAC invalide ou expiré : ${err.message}`, 401);
+      const candidates = [
+        process.env.BCRG_HUB_JWT_SECRET,
+        'bcrg_hub_super_secret_jwt_key_a_changer_en_production_2026',
+        'supersecret_bcrg_hub_production_jwt_key_2026',
+        'supersecret_sso_portal_key_2026'
+      ].filter(Boolean) as string[];
+
+      let lastError: any = null;
+      for (const secret of candidates) {
+        try {
+          payload = jwt.verify(token, secret, { algorithms: ['HS256'] });
+          if (payload) break;
+        } catch (err: any) {
+          lastError = err;
+        }
+      }
+
+      if (!payload) {
+        throw new AppError(`Jeton SSO HMAC invalide ou expiré : ${lastError?.message || 'signature invalide'}`, 401);
       }
     } else {
       throw new AppError(`Algorithme de jeton non pris en charge : ${alg}`, 401);
