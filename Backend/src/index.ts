@@ -100,8 +100,11 @@ app.get('/health', (_req: Request, res: Response) => {
 // Documentation Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Routes d'authentification (avec limitation stricte)
-app.use('/api/auth', loginLimiter, authRoutes);
+// Routes d'authentification classiques (avec limitation anti-brute-force)
+// Le loginLimiter ne s'applique qu'aux routes password-based, PAS au SSO.
+app.use('/api/auth/login', loginLimiter);
+app.use('/api/auth/change-password', loginLimiter);
+app.use('/api/auth', authRoutes);
 
 // Routes du Sprint 2 (VIP & Vehicules)
 app.use('/api/v1', personnelRoutes);

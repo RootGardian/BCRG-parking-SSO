@@ -13,7 +13,7 @@ export const apiClient = axios.create({
     "Content-Type": "application/json",
     Accept: "application/json",
   },
-  timeout: 180000,
+  timeout: 15000,
 });
 
 // Intercepteur de requête : Injection automatique du token JWT Bearer depuis le localStorage

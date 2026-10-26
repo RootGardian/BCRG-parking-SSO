@@ -8,8 +8,6 @@ import { ssoService } from '../services/sso.service';
 import {
   normalizeMatricule,
   getMatriculeVariants,
-  matchPersonNames,
-  matchEmailWithPerson,
 } from '../utils/matricule.util';
 
 // Setup pepper and jwt secret
@@ -128,7 +126,7 @@ export const ssoLogin = async (req: Request, res: Response): Promise<void> => {
     }
   }
 
-  // Stratégie 3 (Index SQL direct ~1 ms) : Recherche directe par nom et prénom exacts
+  // Stratégie 3 (Index SQL direct ~1 ms) : Recherche directe par nom et prénom exacts (ordre normal et inversé)
   if (!utilisateur && adLastName && adFirstName) {
     utilisateur = await db.orm.public.Utilisateur.where({ nom: adLastName, prenom: adFirstName }).first();
     if (!utilisateur) {
@@ -136,18 +134,9 @@ export const ssoLogin = async (req: Request, res: Response): Promise<void> => {
     }
   }
 
-  // Stratégie 4 (Repli scan complet) : Uniquement si non trouvé par index directs (1ère connexion ou nom complexe)
-  if (!utilisateur && (adLastName || adFirstName)) {
-    const allUsers = await db.orm.public.Utilisateur.all();
-    utilisateur = allUsers.find(u => matchPersonNames(adLastName, adFirstName, u.nom, u.prenom)) || null;
-
-    if (!utilisateur && (adEmail || adIdentifier)) {
-      utilisateur = allUsers.find(u =>
-        matchEmailWithPerson(adEmail, u.nom, u.prenom) ||
-        matchEmailWithPerson(adIdentifier, u.nom, u.prenom)
-      ) || null;
-    }
-  }
+  // NOTE : La Stratégie 4 (full table scan) a été supprimée car elle chargeait
+  // tous les utilisateurs en mémoire et causait des délais > 5 minutes.
+  // Si l'utilisateur n'est pas trouvé via les index directs, on le crée à la volée.
 
   if (!utilisateur) {
     // Nouvel utilisateur venant du HUB non pré-importé dans le CSV
